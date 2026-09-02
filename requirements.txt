@@ -1,0 +1,11 @@
+torch
+torchvision
+opencv-python
+timm
+scipy
+scikit-image
+kornia
+einops
+tqdm
+onnx
+onnxruntime
