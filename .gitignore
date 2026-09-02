@@ -2,5 +2,5 @@
 .vscode/
 .idea/
 **__pycache__/
-onnx_exports/
+onnx_models/
 checkpoints/

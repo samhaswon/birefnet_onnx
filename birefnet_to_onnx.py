@@ -1,172 +1,137 @@
 #!/usr/bin/env python3
-"""
-Export BiRefNet_lite-2K (trained with the provided HF adapter) to ONNX.
+"""Export BiRefNet checkpoints with an ONNX-compatible deformable convolution."""
 
-- Loads a .safetensors or .bin/.pt state dict from a checkpoint directory or file
-- Rebuilds the same adapter around the HF model
-- Exports a single output named "logits" shaped (N, 1, H, W)
-
-Requirements:
-pip install torch onnx onnxruntime safetensors transformers pillow
-"""
-
+import argparse
+import sys
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union, Optional
 
-import cv2
-import numpy as np
 import torch
-import torch.nn as nn
 
-try:
-    from safetensors.torch import load_file as safetensors_load
-except Exception:
-    safetensors_load = None
-
-import deform_conv2d_onnx_exporter
-deform_conv2d_onnx_exporter.register_deform_conv2d_onnx_op()
-
-from model import BiRefNet
-
-# -----------------------
-# Global configuration
-# -----------------------
-CHECKPOINT_PATH: Union[str, Path] = "/home/samuel/ai_data/skin_models/BiRefNet/birefnet_state.pth.tar"  # dir with model.safetensors or a file path
-# CHECKPOINT_PATH: Union[str, Path] = "/home/samuel/ai_data/mq_models/birefnet/checkpoint_85.pth.tar"  # dir with model.safetensors or a file path
-BASE_MODEL_ID: str = "ZhengPeng7/BiRefNet_lite-2K"
-OUTPUT_ONNX_PATH: Union[str, Path] = "/home/samuel/ai_data/skin_models/BiRefNet/birefnet.onnx"
-# OUTPUT_ONNX_PATH: Union[str, Path] = "/home/samuel/ai_data/mq_models/birefnet/birefnet_seams_fp16.onnx"
-
-# Input and export knobs
-IMAGE_SIZE: int = 1728           # used only when USE_DYNAMIC_AXES=False
-BATCH_SIZE: int = 1              # used only when USE_DYNAMIC_AXES=False
-USE_DYNAMIC_AXES: bool = False    # True -> dynamic N, H, W
-OPSET: int = 21
-DEVICE: str = "cpu"
-DTYPE: torch.dtype = torch.float32  # keep fp32 for widest runtime support
+ROOT = Path(__file__).resolve().parent
+BIREFNET_ROOT = ROOT / "BiRefNet"
 
 
-# -----------------------
-# Model adapter
-# -----------------------
-class BiRefNetHFAdapter(nn.Module):
+def parse_args() -> argparse.Namespace:
+    """Parse command-line options.
+
+    :return: Parsed arguments.
     """
-    Wraps the base model to present {'logits': (N, 1, H, W)}.
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("checkpoint", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--implementation", choices=("baseline", "optimized"), default="baseline")
+    parser.add_argument("--opset", type=int, default=21, choices=range(11, 22))
+    parser.add_argument("--image-size", type=int, default=1024)
+    parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--dynamic", action="store_true")
+    parser.add_argument("--skip-runtime-check", action="store_true")
+    return parser.parse_args()
+
+
+def configure_birefnet(checkpoint: Path) -> None:
+    """Add upstream sources to the import path and select the checkpoint backbone.
+
+    :param checkpoint: Checkpoint whose filename identifies the backbone.
     """
+    sys.path.insert(0, str(BIREFNET_ROOT))
+    import config
 
-    def __init__(self, base: nn.Module) -> None:
-        super().__init__()
-        self.base = base
+    original_config = config.Config
+    backbone = "swin_v1_t" if "swin_v1_tiny" in checkpoint.name else "swin_v1_l"
 
-    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
-        out = self.base(pixel_values)[0]
-        out = torch.sigmoid(out)
-        # Keep the exported output in the model dtype rather than promoting an
-        # FP16 graph through a float32 scalar constant.
-        out = torch.where(out > 0.5, out, torch.zeros_like(out))
-        return out
+    class ExportConfig(original_config):
+        def __init__(self) -> None:
+            super().__init__()
+            self.bb = backbone
+            channels = {
+                "swin_v1_t": [768, 384, 192, 96],
+                "swin_v1_l": [1536, 768, 384, 192],
+            }[backbone]
+            self.lateral_channels_in_collection = [channel * 2 for channel in channels]
+            self.cxt = self.lateral_channels_in_collection[1:][::-1][-self.cxt_num:]
 
-
-def _make_dummy_input(
-    batch: int, size: int, device: torch.device, dtype: torch.dtype
-) -> torch.Tensor:
-    size = max(32, (size + 31) // 32 * 32)
-    return torch.zeros(batch, 3, size, size, device=device, dtype=dtype)
+    config.Config = ExportConfig
 
 
-# -----------------------
-# Export
-# -----------------------
-def export_onnx() -> None:
+def load_model(checkpoint: Path, device: torch.device) -> torch.nn.Module:
+    """Load a canonical BiRefNet model and its weights.
+
+    :param checkpoint: Path to a plain PyTorch state dictionary.
+    :param device: Export device.
+    :return: Model in evaluation mode.
     """
-    Build model, load weights, and export to ONNX.
+    configure_birefnet(checkpoint)
+    from models.birefnet import BiRefNet
+    from utils import check_state_dict
+
+    model = BiRefNet(bb_pretrained=False)
+    state_dict = torch.load(checkpoint, map_location="cpu", weights_only=True)
+    model.load_state_dict(check_state_dict(state_dict))
+    return model.eval().to(device)
+
+
+def register_deform_conv(implementation: str, opset: int) -> None:
+    """Register one of the two local DeformConv graph lowerings.
+
+    :param implementation: ``baseline`` or memory-optimized lowering.
+    :param opset: Target ONNX opset.
     """
-    test_image = cv2.imread("images/00712.png")
-    test_image_tensor = (
-        cv2.resize(cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB), (IMAGE_SIZE, IMAGE_SIZE)
-                   )).astype(np.float32) / 255.0
-    # mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-    # std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
-    # test_image_tensor = (test_image_tensor - mean) / std
-    test_image_tensor = torch.from_numpy(test_image_tensor.transpose(2, 0, 1))
+    if implementation == "baseline":
+        import deform_conv2d_onnx_exporter as exporter
+    else:
+        import modified_deform_conv2d_onnx_exporter as exporter
+    exporter.onnx_opset_version = opset
+    exporter.register_deform_conv2d_onnx_op()
 
-    out_path = Path(OUTPUT_ONNX_PATH)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    checkpoint = torch.load(CHECKPOINT_PATH, map_location='cpu', weights_only=False)
-    net = BiRefNet()
-    net.load_state_dict(checkpoint["state"]["state_dict"])
+def export_model(args: argparse.Namespace) -> None:
+    """Export and validate one model.
 
-    model = BiRefNetHFAdapter(net)
-    if DTYPE == torch.float16:
-        test_image_tensor = test_image_tensor.half()
-        model = model.half()
+    :param args: Parsed command-line options.
+    """
+    if args.device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA export requested, but PyTorch cannot access a CUDA device")
+    if args.image_size < 32 or args.image_size % 32:
+        raise ValueError("--image-size must be at least 32 and divisible by 32")
 
-    model.eval()
-    with torch.no_grad():
-        if USE_DYNAMIC_AXES:
-            dummy = _make_dummy_input(1, IMAGE_SIZE, device=torch.device(DEVICE), dtype=DTYPE)
-            dynamic_axes = {
-                "pixel_values": {0: "batch", 2: "height", 3: "width"},
-                "logits": {0: "batch", 2: "height", 3: "width"},
-            }
-        else:
-            dummy = _make_dummy_input(BATCH_SIZE, IMAGE_SIZE, device=torch.device(DEVICE), dtype=DTYPE)
-            dynamic_axes = None
+    register_deform_conv(args.implementation, args.opset)
+    device = torch.device(args.device)
+    model = load_model(args.checkpoint.resolve(), device)
+    example = torch.randn(1, 3, args.image_size, args.image_size, device=device)
+    dynamic_axes = None
+    if args.dynamic:
+        dynamic_axes = {
+            "input_image": {0: "batch", 2: "height", 3: "width"},
+            "output_image": {0: "batch", 2: "height", 3: "width"},
+        }
 
-        # Quick model test
-        test_out = model(test_image_tensor.unsqueeze(0))
-        print(f"Model out shape: {test_out.shape}")
-        test_out = (test_out.squeeze(0).cpu().numpy() > 0.5).astype(np.float32)
-        cv2.imwrite(
-            "test/hf_test.png",
-            np.dstack(
-                (test_image,
-                 cv2.resize(
-                     (test_out.transpose(1, 2, 0) * 255).astype(np.uint8),
-                     test_image.shape[::-1][1:]
-                 )
-                 )
-            )
-        )
-
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with torch.inference_mode():
+        expected = model(example)[-1]
         torch.onnx.export(
             model,
-            (dummy,),
-            str(out_path),
-            input_names=["pixel_values"],
-            output_names=["logits"],
-            export_params=True,
-            opset_version=OPSET,
-            do_constant_folding=True,
+            example,
+            str(args.output),
+            opset_version=args.opset,
+            input_names=["input_image"],
+            output_names=["output_image"],
             dynamic_axes=dynamic_axes,
             dynamo=False,
             external_data=False,
         )
-    print("Model exported to ONNX")
-    # Optional sanity check with onnxruntime if present
-    try:
-        import onnx
+
+    import onnx
+
+    onnx.checker.check_model(onnx.load(str(args.output)))
+    if not args.skip_runtime_check:
+        import numpy as np
         import onnxruntime as ort
 
-        onnx_model = onnx.load(str(out_path))
-        onnx.checker.check_model(onnx_model)
-
-        sess = ort.InferenceSession(str(out_path), providers=["CPUExecutionProvider"])
-        test_in = dummy.detach().cpu().numpy()
-        ort_out = sess.run(None, {"pixel_values": test_in})[0]
-        if ort_out.ndim != 4 or ort_out.shape[1] != 1:
-            raise RuntimeError(f"Unexpected ONNX output shape: {ort_out.shape}")
-    except Exception as ex:
-        # Do not fail the export if runtime isn't available, but surface real issues.
-        msg = str(ex)
-        if "No module named" in msg or "Cannot find module" in msg:
-            pass
-        else:
-            raise
-
-    print(f"OK: wrote {out_path.resolve()}")
+        session = ort.InferenceSession(str(args.output), providers=["CPUExecutionProvider"])
+        actual = session.run(None, {"input_image": example.cpu().numpy()})[0]
+        np.testing.assert_allclose(actual, expected.cpu().numpy(), rtol=2e-3, atol=2e-4)
+    print(f"Wrote {args.output.resolve()} ({args.output.stat().st_size / 2**20:.1f} MiB)")
 
 
 if __name__ == "__main__":
-    export_onnx()
+    export_model(parse_args())

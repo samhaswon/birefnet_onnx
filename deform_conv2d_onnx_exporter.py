@@ -22,7 +22,10 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import typing
+
 import torch
+from torch import _C
 from torch.onnx import register_custom_op_symbolic
 from torch.onnx import symbolic_helper as sym_help
 try:
@@ -69,7 +72,17 @@ def unsqueeze(g, input, dims):
 
 
 def get_tensor_dim_size(tensor, dim):
-    return sym_help._get_tensor_dim_size(tensor, dim)
+    tensor_dim_size = sym_help._get_tensor_dim_size(tensor, dim)
+    if tensor_dim_size is None and dim in (2, 3):
+        tensor_type = typing.cast(_C.TensorType, tensor.type())
+        tensor_strides = tensor_type.strides()
+        tensor_dim_size = (
+            tensor_strides[2] if dim == 3 else tensor_strides[1] // tensor_strides[2]
+        )
+    elif tensor_dim_size is None and dim == 0:
+        tensor_type = typing.cast(_C.TensorType, tensor.type())
+        tensor_dim_size = tensor_type.strides()[3]
+    return tensor_dim_size
 
 
 def tensor(g, value, dtype):
@@ -587,25 +600,16 @@ def create_dcn_params(input, weight, offset, mask, bias, stride_h, stride_w,
     out_h = get_tensor_dim_size(offset, 2)
     out_w = get_tensor_dim_size(offset, 3)
 
-    if JitScalarType is not None and hasattr(JitScalarType, "from_value"):
-        # 2.0 and later
-        scalar_type = JitScalarType.from_value(offset)
-        offset_dtype_onnx = scalar_type.onnx_type()
-        offset_dtype_pytorch = scalar_type.dtype()
-
-        scalar_type = JitScalarType.from_dtype(torch.int64)
-        index_dtype_onnx = scalar_type.onnx_type()
-        index_dtype_pytorch = scalar_type.dtype()
+    offset_scalar_type = sym_help._try_get_scalar_type(offset)
+    if offset_scalar_type is None:
+        offset_dtype_onnx = sym_help.cast_pytorch_to_onnx["Float"]
+        offset_dtype_pytorch = torch.float32
     else:
-        offset_dtype = sym_help._try_get_scalar_type(offset)
-        offset_dtype_onnx = sym_help.cast_pytorch_to_onnx[offset_dtype]
-        dtype_idx = sym_help.scalar_type_to_onnx.index(offset_dtype_onnx)
-        offset_dtype_pytorch = sym_help.scalar_type_to_pytorch_type[dtype_idx]
+        offset_dtype_onnx = offset_scalar_type.onnx_type()
+        offset_dtype_pytorch = offset_scalar_type.dtype()
 
-        index_dtype = "Long"
-        index_dtype_onnx = sym_help.cast_pytorch_to_onnx[index_dtype]
-        dtype_idx = sym_help.scalar_type_to_onnx.index(index_dtype_onnx)
-        index_dtype_pytorch = sym_help.scalar_type_to_pytorch_type[dtype_idx]
+    index_dtype_onnx = sym_help.cast_pytorch_to_onnx["Long"]
+    index_dtype_pytorch = torch.long
 
     dcn_params = {
         # batch and kernel

@@ -8,4 +8,5 @@ kornia
 einops
 tqdm
 onnx
-onnxruntime
+onnxruntime-gpu
+psutil
