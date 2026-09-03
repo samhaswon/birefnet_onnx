@@ -1,0 +1,291 @@
+{
+  "image_size": 1024,
+  "batch_size": 1,
+  "warmup_runs": 3,
+  "measured_runs": 10,
+  "torch_compile": true,
+  "results": [
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 7037.2608214383945,
+      "stddev_ms": 83.07452256351634,
+      "peak_process_rss_mib": 2640.84375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-amp-fp16",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 101.56909902580082,
+      "stddev_ms": 1.1239785051784215,
+      "peak_process_rss_mib": 1804.23828125,
+      "peak_cuda_allocated_mib": 1500.76025390625
+    },
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-static-fp16",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 78.58366330619901,
+      "stddev_ms": 0.6049914549040171,
+      "peak_process_rss_mib": 1796.6484375,
+      "peak_cuda_allocated_mib": 774.68310546875
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 11368.765619210899,
+      "stddev_ms": 377.84168806172926,
+      "peak_process_rss_mib": 3360.0078125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-amp-fp16",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 246.9881078461185,
+      "stddev_ms": 1.4352061199631998,
+      "peak_process_rss_mib": 3019.1328125,
+      "peak_cuda_allocated_mib": 2217.8291015625
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-static-fp16",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 215.3974722372368,
+      "stddev_ms": 1.6343221997003545,
+      "peak_process_rss_mib": 3902.31640625,
+      "peak_cuda_allocated_mib": 1804.3603515625
+    },
+    {
+      "model": "birefnet-full-baseline-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-full-baseline-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 584.0342960786074,
+      "stddev_ms": 1.2059120593509611,
+      "peak_process_rss_mib": 2322.47265625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 11030.673806322739,
+      "stddev_ms": 884.6392449107813,
+      "peak_process_rss_mib": 14834.03515625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 765.3799187391996,
+      "stddev_ms": 2.0884235609622483,
+      "peak_process_rss_mib": 4006.91015625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-full-opset22-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 415.66183811519295,
+      "stddev_ms": 1.5984314244182805,
+      "peak_process_rss_mib": 2199.40625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 8539.931408665143,
+      "stddev_ms": 20.375697063186305,
+      "peak_process_rss_mib": 8983.16015625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 606.7494625691324,
+      "stddev_ms": 2.400106784901866,
+      "peak_process_rss_mib": 3950.94921875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-full-optimized-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 590.9051403170452,
+      "stddev_ms": 2.634596056667267,
+      "peak_process_rss_mib": 2322.078125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 10832.099201297387,
+      "stddev_ms": 478.13322693612486,
+      "peak_process_rss_mib": 13958.8828125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 781.2710591824725,
+      "stddev_ms": 2.605141537604354,
+      "peak_process_rss_mib": 4059.8515625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 308.5833843331784,
+      "stddev_ms": 1.2001918381397723,
+      "peak_process_rss_mib": 2125.94140625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 6655.60589954257,
+      "stddev_ms": 30.716687911024444,
+      "peak_process_rss_mib": 11872.9765625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 370.23727828636765,
+      "stddev_ms": 2.1272404791610398,
+      "peak_process_rss_mib": 2056.75,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-lite-opset22-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 139.5847213221714,
+      "stddev_ms": 1.2298706422158623,
+      "peak_process_rss_mib": 1942.5703125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 2149.739299993962,
+      "stddev_ms": 10.669717261251552,
+      "peak_process_rss_mib": 4879.19140625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 212.07785739097744,
+      "stddev_ms": 1.3482701361152707,
+      "peak_process_rss_mib": 1825.078125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "skipped",
+      "reason": "static FP16 models are GPU-only benchmark paths"
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21-fp16",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 315.16402231063694,
+      "stddev_ms": 1.3769560912574417,
+      "peak_process_rss_mib": 2131.0234375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 6713.967368542217,
+      "stddev_ms": 58.62128222529745,
+      "peak_process_rss_mib": 10885.63671875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 386.3335235277191,
+      "stddev_ms": 1.7937795034444028,
+      "peak_process_rss_mib": 2052.109375,
+      "peak_cuda_allocated_mib": null
+    }
+  ]
+}

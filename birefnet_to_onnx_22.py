@@ -21,6 +21,7 @@ def parse_cli() -> argparse.Namespace:
     parser.add_argument("output", type=Path)
     parser.add_argument("--image-size", type=int, default=1024)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--dtype", choices=("fp32", "fp16"), default="fp32")
     parser.add_argument("--dynamic", action="store_true")
     parser.add_argument("--skip-runtime-check", action="store_true")
     return parser.parse_args()
@@ -63,7 +64,11 @@ def export_model(args: argparse.Namespace) -> None:
 
     device = torch.device(args.device)
     model = load_model(args.checkpoint.resolve(), device)
-    example = torch.randn(1, 3, args.image_size, args.image_size, device=device)
+    dtype = torch.float16 if args.dtype == "fp16" else torch.float32
+    model = model.to(dtype=dtype)
+    example = torch.randn(
+        1, 3, args.image_size, args.image_size, device=device, dtype=dtype
+    )
     dynamic_axes = None
     if args.dynamic:
         dynamic_axes = {

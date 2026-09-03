@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--opset", type=int, default=21, choices=range(11, 22))
     parser.add_argument("--image-size", type=int, default=1024)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    parser.add_argument("--dtype", choices=("fp32", "fp16"), default="fp32")
     parser.add_argument("--dynamic", action="store_true")
     parser.add_argument("--skip-runtime-check", action="store_true")
     return parser.parse_args()
@@ -97,7 +98,11 @@ def export_model(args: argparse.Namespace) -> None:
     register_deform_conv(args.implementation, args.opset)
     device = torch.device(args.device)
     model = load_model(args.checkpoint.resolve(), device)
-    example = torch.randn(1, 3, args.image_size, args.image_size, device=device)
+    dtype = torch.float16 if args.dtype == "fp16" else torch.float32
+    model = model.to(dtype=dtype)
+    example = torch.randn(
+        1, 3, args.image_size, args.image_size, device=device, dtype=dtype
+    )
     dynamic_axes = None
     if args.dynamic:
         dynamic_axes = {
@@ -129,7 +134,10 @@ def export_model(args: argparse.Namespace) -> None:
 
         session = ort.InferenceSession(str(args.output), providers=["CPUExecutionProvider"])
         actual = session.run(None, {"input_image": example.cpu().numpy()})[0]
-        np.testing.assert_allclose(actual, expected.cpu().numpy(), rtol=2e-3, atol=2e-4)
+        tolerance = 2e-2 if dtype == torch.float16 else 2e-3
+        np.testing.assert_allclose(
+            actual, expected.cpu().numpy(), rtol=tolerance, atol=tolerance / 10
+        )
     print(f"Wrote {args.output.resolve()} ({args.output.stat().st_size / 2**20:.1f} MiB)")
 
 

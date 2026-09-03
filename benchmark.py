@@ -2,6 +2,7 @@
 """Benchmark batch-one BiRefNet Torch and ONNX inference in isolated processes."""
 
 import argparse
+import contextlib
 import fnmatch
 import json
 import resource
@@ -41,6 +42,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", choices=("cpu", "cuda"), help=argparse.SUPPRESS)
     parser.add_argument("--checkpoint", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--model", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "--torch-mode", choices=("fp32", "amp-fp16", "static-fp16"),
+        default="fp32", help=argparse.SUPPRESS,
+    )
     return parser.parse_args()
 
 
@@ -90,14 +95,26 @@ def benchmark_torch(args: argparse.Namespace) -> dict:
     device = torch.device(args.device)
     torch.set_float32_matmul_precision("high")
     model = load_model(args.checkpoint.resolve(), device).to(memory_format=torch.channels_last)
-    sample = torch.randn(1, 3, args.image_size, args.image_size, device=device)
+    if args.torch_mode != "fp32" and device.type != "cuda":
+        raise ValueError(f"{args.torch_mode} is only supported on CUDA")
+    dtype = torch.float16 if args.torch_mode == "static-fp16" else torch.float32
+    if args.torch_mode == "static-fp16":
+        model = model.to(dtype=dtype)
+    sample = torch.randn(
+        1, 3, args.image_size, args.image_size, device=device, dtype=dtype
+    )
     sample = sample.to(memory_format=torch.channels_last)
     if not args.no_torch_compile:
         model = torch.compile(model, mode="max-autotune-no-cudagraphs")
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
 
-    with torch.inference_mode():
+    autocast = (
+        torch.amp.autocast("cuda", dtype=torch.float16)
+        if args.torch_mode == "amp-fp16"
+        else contextlib.nullcontext()
+    )
+    with torch.inference_mode(), autocast:
         for _ in range(args.warmup_runs):
             model(sample)
         if device.type == "cuda":
@@ -112,7 +129,8 @@ def benchmark_torch(args: argparse.Namespace) -> dict:
     gpu_peak = None
     if device.type == "cuda":
         gpu_peak = torch.cuda.max_memory_allocated(device) / 2**20
-    engine = "torch-compiled" if not args.no_torch_compile else "torch-optimized-eager"
+    execution = "compiled" if not args.no_torch_compile else "optimized-eager"
+    engine = f"torch-{execution}-{args.torch_mode}"
     return summarize(args.checkpoint.stem, engine, args.device, timings, gpu_peak)
 
 
@@ -124,16 +142,26 @@ def benchmark_onnx(args: argparse.Namespace) -> dict:
     """
     import onnxruntime as ort
 
+    if args.device == "cuda":
+        ort.preload_dlls(directory="")
     provider = "CUDAExecutionProvider" if args.device == "cuda" else "CPUExecutionProvider"
     if provider not in ort.get_available_providers():
         raise RuntimeError(f"{provider} is unavailable")
     options = ort.SessionOptions()
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-    session = ort.InferenceSession(str(args.model), sess_options=options, providers=[provider])
+    providers = (
+        [("CUDAExecutionProvider", {"device_id": 0}), "CPUExecutionProvider"]
+        if args.device == "cuda"
+        else ["CPUExecutionProvider"]
+    )
+    session = ort.InferenceSession(
+        str(args.model), sess_options=options, providers=providers
+    )
     if provider not in session.get_providers():
         raise RuntimeError(f"ONNX Runtime did not activate {provider}")
     input_meta = session.get_inputs()[0]
-    sample = np.random.randn(1, 3, args.image_size, args.image_size).astype(np.float32)
+    input_dtype = np.float16 if input_meta.type == "tensor(float16)" else np.float32
+    sample = np.random.randn(1, 3, args.image_size, args.image_size).astype(input_dtype)
     feeds = {input_meta.name: sample}
     for _ in range(args.warmup_runs):
         session.run(None, feeds)
@@ -197,8 +225,10 @@ def main(args: argparse.Namespace) -> None:
     models = sorted(args.models_dir.glob("*.onnx"))
     results = []
     for checkpoint in checkpoints:
-        for device in ("cpu", "cuda"):
-            engine = "torch-compiled" if not args.no_torch_compile else "torch-optimized-eager"
+        torch_cases = [("cpu", "fp32"), ("cuda", "amp-fp16"), ("cuda", "static-fp16")]
+        for device, torch_mode in torch_cases:
+            execution = "compiled" if not args.no_torch_compile else "optimized-eager"
+            engine = f"torch-{execution}-{torch_mode}"
             label = {"model": checkpoint.stem, "engine": engine, "device": device}
             if device == "cuda" and args.skip_gpu:
                 results.append(skipped(**label, reason="--skip-gpu"))
@@ -206,12 +236,21 @@ def main(args: argparse.Namespace) -> None:
             print(f"Benchmarking {label}", flush=True)
             results.append(invoke_worker(
                 args,
-                ["--engine", "torch", "--device", device, "--checkpoint", str(checkpoint)],
+                [
+                    "--engine", "torch", "--device", device,
+                    "--torch-mode", torch_mode, "--checkpoint", str(checkpoint),
+                ],
                 label,
             ))
     for model in models:
         for device in ("cpu", "cuda"):
             label = {"model": model.stem, "engine": "onnxruntime", "device": device}
+            is_static_fp16 = model.stem.endswith("-fp16")
+            if device == "cpu" and is_static_fp16:
+                results.append(skipped(
+                    **label, reason="static FP16 models are GPU-only benchmark paths"
+                ))
+                continue
             disabled = any(
                 fnmatch.fnmatch(model.stem, pattern) for pattern in args.disable_onnx_gpu
             )
