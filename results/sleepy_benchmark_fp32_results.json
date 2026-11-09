@@ -1,0 +1,171 @@
+{
+  "image_size": 1024,
+  "batch_size": 1,
+  "warmup_runs": 3,
+  "measured_runs": 10,
+  "torch_compile": true,
+  "fp32_only": true,
+  "tf32": false,
+  "results": [
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 9237.798498000484,
+      "stddev_ms": 475.2955077902745,
+      "peak_process_rss_mib": 3018.29296875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-fp32",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 195.0699194916524,
+      "stddev_ms": 1.290281947535426,
+      "peak_process_rss_mib": 2444.109375,
+      "peak_cuda_allocated_mib": 1975.2333984375
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 14564.05870540766,
+      "stddev_ms": 309.0063047728602,
+      "peak_process_rss_mib": 3779.65234375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-fp32",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 557.0161390001886,
+      "stddev_ms": 2.4262240164846776,
+      "peak_process_rss_mib": 2631.76953125,
+      "peak_cuda_allocated_mib": 2785.1416015625
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 14362.282857112586,
+      "stddev_ms": 517.611118374995,
+      "peak_process_rss_mib": 15018.40234375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 932.43358010659,
+      "stddev_ms": 2.463426473580868,
+      "peak_process_rss_mib": 3601.5625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 10296.88810397638,
+      "stddev_ms": 516.4481432352662,
+      "peak_process_rss_mib": 8417.26953125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 748.8700446905568,
+      "stddev_ms": 3.3991288580942993,
+      "peak_process_rss_mib": 3565.37109375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 14449.85481397016,
+      "stddev_ms": 421.22452398262067,
+      "peak_process_rss_mib": 13431.11328125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 948.0631029000506,
+      "stddev_ms": 2.6097045137277988,
+      "peak_process_rss_mib": 3710.4453125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 7210.438195511233,
+      "stddev_ms": 200.70015388374387,
+      "peak_process_rss_mib": 12126.3203125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 419.057346903719,
+      "stddev_ms": 2.105213928876052,
+      "peak_process_rss_mib": 1597.6953125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 3178.495172597468,
+      "stddev_ms": 172.4465243207808,
+      "peak_process_rss_mib": 4308.90234375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 237.87141101201996,
+      "stddev_ms": 1.005264325493273,
+      "peak_process_rss_mib": 1332.34375,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 7252.847130189184,
+      "stddev_ms": 189.8608565359562,
+      "peak_process_rss_mib": 10304.4921875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 436.1504197004251,
+      "stddev_ms": 1.8035188665205708,
+      "peak_process_rss_mib": 1549.30078125,
+      "peak_cuda_allocated_mib": null
+    }
+  ]
+}

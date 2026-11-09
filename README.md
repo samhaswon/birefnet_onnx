@@ -44,11 +44,19 @@ python3 benchmark.py --warmup-runs 3 --runs 10
 ```
 
 Torch uses `torch.compile` by default. Add `--no-torch-compile` for optimized eager execution. CPU
-uses FP32. CUDA measures both FP32 weights under modern `torch.amp.autocast("cuda",
+uses FP32. CUDA measures FP32, FP32 weights under modern `torch.amp.autocast("cuda",
 dtype=torch.float16)` and a separate static-FP16 weight cast. ONNX FP16 models are likewise run only
 on CUDA; FP32 ONNX models run on both CPU and CUDA. Each case runs in an isolated process and
 records average latency, standard deviation, peak process RSS, and Torch peak CUDA allocation where
-applicable.
+applicable. FP32 measurements disable TF32 in both backends.
+
+Run only FP32 cases for both backends (CPU and CUDA):
+
+```bash
+python3 benchmark.py --fp32-only --output benchmark_fp32_results.json
+```
+
+This excludes AMP and static-FP16 cases. Combine with `--skip-gpu` for CPU-only measurements.
 
 For CUDA, the benchmark preloads ONNX Runtime's CUDA and cuDNN libraries with
 `ort.preload_dlls(directory="")` before creating the execution provider.

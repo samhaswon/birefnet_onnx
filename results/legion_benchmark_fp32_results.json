@@ -1,0 +1,156 @@
+{
+  "image_size": 1024,
+  "batch_size": 1,
+  "warmup_runs": 3,
+  "measured_runs": 10,
+  "torch_compile": true,
+  "fp32_only": true,
+  "tf32": false,
+  "results": [
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 10901.587096502772,
+      "stddev_ms": 224.73863190968186,
+      "peak_process_rss_mib": 3014.64453125,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-bb_swin_v1_tiny-epoch_232",
+      "engine": "torch-compiled-fp32",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 469.65722179738805,
+      "stddev_ms": 0.42037380697965027,
+      "peak_process_rss_mib": 2174.26953125,
+      "peak_cuda_allocated_mib": 1480.982421875
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-fp32",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 18081.054697092623,
+      "stddev_ms": 555.0376770854459,
+      "peak_process_rss_mib": 3691.796875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "BiRefNet-general-epoch_244",
+      "engine": "torch-compiled-fp32",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 2029.1576482937671,
+      "stddev_ms": 2.3949817797668245,
+      "peak_process_rss_mib": 3323.45703125,
+      "peak_cuda_allocated_mib": 2792.0166015625
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 16443.442705407506,
+      "stddev_ms": 642.044248787703,
+      "peak_process_rss_mib": 14231.07421875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "failed",
+      "error": "m/card4/device/vendor\"\u001b[m\n\u001b[0;93m2026-11-08 17:46:30.263062746 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under \"/sys/class/drm/card0\": device_discovery.cc:93 ReadFileContents Failed to open file: \"/sys/class/drm/card0/device/vendor\"\u001b[m\n\u001b[1;31m2026-11-08 17:46:36.755847165 [E:onnxruntime:, sequential_executor.cc:615 ExecuteKernel] Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376\n\u001b[m\nTraceback (most recent call last):\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 292, in <module>\n    run_worker(options)\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 187, in run_worker\n    result = benchmark_torch(args) if args.engine == \"torch\" else benchmark_onnx(args)\n                                                                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 173, in benchmark_onnx\n    session.run(None, feeds)\n  File \"/home/samuel/code_projects/birefnet_onnx/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\", line 322, in run\n    return self._sess.run(output_names, input_feed, run_options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nonnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376"
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 12600.622021005256,
+      "stddev_ms": 340.2432813168333,
+      "peak_process_rss_mib": 8443.16796875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "failed",
+      "error": "m/card4/device/vendor\"\u001b[m\n\u001b[0;93m2026-11-08 17:49:30.226678250 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under \"/sys/class/drm/card0\": device_discovery.cc:93 ReadFileContents Failed to open file: \"/sys/class/drm/card0/device/vendor\"\u001b[m\n\u001b[1;31m2026-11-08 17:49:35.873881252 [E:onnxruntime:, sequential_executor.cc:615 ExecuteKernel] Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376\n\u001b[m\nTraceback (most recent call last):\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 292, in <module>\n    run_worker(options)\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 187, in run_worker\n    result = benchmark_torch(args) if args.engine == \"torch\" else benchmark_onnx(args)\n                                                                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 173, in benchmark_onnx\n    session.run(None, feeds)\n  File \"/home/samuel/code_projects/birefnet_onnx/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\", line 322, in run\n    return self._sess.run(output_names, input_feed, run_options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nonnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376"
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 18465.4358225991,
+      "stddev_ms": 3467.9686031396113,
+      "peak_process_rss_mib": 13411.46875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "failed",
+      "error": "m/card4/device/vendor\"\u001b[m\n\u001b[0;93m2026-11-08 17:53:39.567704253 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under \"/sys/class/drm/card0\": device_discovery.cc:93 ReadFileContents Failed to open file: \"/sys/class/drm/card0/device/vendor\"\u001b[m\n\u001b[1;31m2026-11-08 17:53:45.999269624 [E:onnxruntime:, sequential_executor.cc:615 ExecuteKernel] Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376\n\u001b[m\nTraceback (most recent call last):\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 292, in <module>\n    run_worker(options)\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 187, in run_worker\n    result = benchmark_torch(args) if args.engine == \"torch\" else benchmark_onnx(args)\n                                                                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 173, in benchmark_onnx\n    session.run(None, feeds)\n  File \"/home/samuel/code_projects/birefnet_onnx/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\", line 322, in run\n    return self._sess.run(output_names, input_feed, run_options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nonnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Non-zero status code returned while running FusedMatMul node. Name:'/bb/layers.0/blocks.0/attn/MatMul/MatMulScaleFusion/' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 240869376"
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 8299.43891260773,
+      "stddev_ms": 660.9426582221782,
+      "peak_process_rss_mib": 11272.90625,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "failed",
+      "error": "device/vendor\"\u001b[m\n\u001b[0;93m2026-11-08 17:55:41.056376210 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under \"/sys/class/drm/card0\": device_discovery.cc:93 ReadFileContents Failed to open file: \"/sys/class/drm/card0/device/vendor\"\u001b[m\n\u001b[1;31m2026-11-08 17:55:44.684882728 [E:onnxruntime:, sequential_executor.cc:615 ExecuteKernel] Non-zero status code returned while running Mul node. Name:'/decoder/decoder_block1/dec_att/aspp_deforms.2/atrous_conv/Mul_8' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 822083584\n\u001b[m\nTraceback (most recent call last):\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 292, in <module>\n    run_worker(options)\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 187, in run_worker\n    result = benchmark_torch(args) if args.engine == \"torch\" else benchmark_onnx(args)\n                                                                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 173, in benchmark_onnx\n    session.run(None, feeds)\n  File \"/home/samuel/code_projects/birefnet_onnx/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\", line 322, in run\n    return self._sess.run(output_names, input_feed, run_options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nonnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Non-zero status code returned while running Mul node. Name:'/decoder/decoder_block1/dec_att/aspp_deforms.2/atrous_conv/Mul_8' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 822083584"
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 4297.515612910502,
+      "stddev_ms": 311.80778384402305,
+      "peak_process_rss_mib": 4318.10546875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "ok",
+      "average_ms": 626.0921860055532,
+      "stddev_ms": 1.532947885126321,
+      "peak_process_rss_mib": 968.23046875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cpu",
+      "status": "ok",
+      "average_ms": 10790.56857569376,
+      "stddev_ms": 1209.5493790242565,
+      "peak_process_rss_mib": 10310.04296875,
+      "peak_cuda_allocated_mib": null
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime",
+      "device": "cuda",
+      "status": "failed",
+      "error": "device/vendor\"\u001b[m\n\u001b[0;93m2026-11-08 17:59:19.866911654 [W:onnxruntime:Default, device_discovery.cc:283 GetGpuDevices] Failed to detect devices under \"/sys/class/drm/card0\": device_discovery.cc:93 ReadFileContents Failed to open file: \"/sys/class/drm/card0/device/vendor\"\u001b[m\n\u001b[1;31m2026-11-08 17:59:23.956903411 [E:onnxruntime:, sequential_executor.cc:615 ExecuteKernel] Non-zero status code returned while running Mul node. Name:'/decoder/decoder_block1/dec_att/aspp_deforms.2/atrous_conv/Mul_8' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 822083584\n\u001b[m\nTraceback (most recent call last):\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 292, in <module>\n    run_worker(options)\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 187, in run_worker\n    result = benchmark_torch(args) if args.engine == \"torch\" else benchmark_onnx(args)\n                                                                  ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/samuel/code_projects/birefnet_onnx/benchmark.py\", line 173, in benchmark_onnx\n    session.run(None, feeds)\n  File \"/home/samuel/code_projects/birefnet_onnx/.venv/lib/python3.12/site-packages/onnxruntime/capi/onnxruntime_inference_collection.py\", line 322, in run\n    return self._sess.run(output_names, input_feed, run_options)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nonnxruntime.capi.onnxruntime_pybind11_state.RuntimeException: [ONNXRuntimeError] : 6 : RUNTIME_EXCEPTION : Non-zero status code returned while running Mul node. Name:'/decoder/decoder_block1/dec_att/aspp_deforms.2/atrous_conv/Mul_8' Status Message: /onnxruntime_src/onnxruntime/core/framework/bfc_arena.cc:358 void* onnxruntime::BFCArena::AllocateRawInternal(size_t, bool, onnxruntime::Stream*) Failed to allocate memory for requested buffer of size 822083584"
+    }
+  ]
+}

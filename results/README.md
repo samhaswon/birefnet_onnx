@@ -2,7 +2,8 @@
 
 All timings are average batch-size-1 inference latency at 1024×1024, using 3 warmup runs and
 10 measured runs. Lower is better. Speedup compares the FP32 CPU result with the fastest completed
-GPU result in the same row.
+GPU result in the same row. Torch GPU FP32 results come from the supplemental
+`*_benchmark_fp32_results.json` runs with TF32 disabled; other results retain the original runs.
 
 ## Sleepy
 
@@ -10,10 +11,10 @@ Ryzen 7 5700X, RTX 3060 12 GB, 48 GB DDR4-3000.
 
 ### Compiled Torch
 
-| Model | CPU FP32 | GPU AMP FP16 | GPU static FP16 | Best GPU speedup |
-|---|---:|---:|---:|---:|
-| Lite | 7,037.3 ms | 101.6 ms | **78.6 ms** | **89.6×** |
-| Full | 11,368.8 ms | 247.0 ms | **215.4 ms** | **52.8×** |
+| Model | CPU FP32 | GPU FP32 | GPU AMP FP16 | GPU static FP16 | Best GPU speedup |
+|---|---:|---:|---:|---:|---:|
+| Lite | 7,037.3 ms | 195.1 ms | 101.6 ms | **78.6 ms** | **89.6×** |
+| Full | 11,368.8 ms | 557.0 ms | 247.0 ms | **215.4 ms** | **52.8×** |
 
 Static FP16 was 22.6% faster than AMP for Lite and 12.8% faster for Full. It also approximately
 halved peak CUDA allocation versus AMP: 775 vs 1,501 MiB for Lite and 1,804 vs 2,218 MiB for Full.
@@ -52,12 +53,13 @@ the GPU did not have enough VRAM.
 
 ### Compiled Torch
 
-| Model | CPU FP32 | GPU AMP FP16 | GPU static FP16 | Best GPU speedup |
-|---|---:|---:|---:|---:|
-| Lite | 13,292.9 ms | **1,285.4 ms** | 1,589.0 ms | **10.3×** |
-| Full | 15,815.7 ms | **5,766.5 ms** | 6,023.2 ms | **2.7×** |
+| Model | CPU FP32 | GPU FP32 | GPU AMP FP16 | GPU static FP16 | Best GPU speedup |
+|---|---:|---:|---:|---:|---:|
+| Lite | 13,292.9 ms | **469.7 ms** | 1,285.4 ms | 1,589.0 ms | **28.3×** |
+| Full | 15,815.7 ms | **2,029.2 ms** | 5,766.5 ms | 6,023.2 ms | **7.8×** |
 
-Unlike the RTX 3060, the GTX 1650 Ti ran AMP faster than static FP16: 19.1% faster for Lite and
+FP32 was the fastest Torch GPU mode on Legion. Among the FP16 modes, the GTX 1650 Ti ran
+AMP faster than static FP16: 19.1% faster for Lite and
 4.3% faster for Full. Static FP16 still reduced peak CUDA allocation from 1,501 to 776 MiB for
 Lite and from 2,217 to 1,803 MiB for Full.
 
@@ -81,9 +83,9 @@ improve latency on hardware without strong native FP16 throughput.
 | Model | Device | Fastest Torch | Fastest ONNX | Winner |
 |---|---|---:|---:|---:|
 | Lite | CPU | 13,292.9 ms (FP32) | **3,894.7 ms** (opset 22 FP32) | **ONNX, 3.41×** |
-| Lite | GPU | 1,285.4 ms (AMP FP16) | **577.2 ms** (opset 22 FP32) | **ONNX, 2.23×** |
+| Lite | GPU | **469.7 ms** (FP32) | 577.2 ms (opset 22 FP32) | **Torch, 1.23×** |
 | Full | CPU | 15,815.7 ms (FP32) | **10,174.2 ms** (opset 22 FP32) | **ONNX, 1.55×** |
-| Full | GPU | **5,766.5 ms** (AMP FP16) | 7,147.8 ms (opset 22 FP16) | **Torch, 1.24×** |
+| Full | GPU | **2,029.2 ms** (FP32) | 7,147.8 ms (opset 22 FP16) | **Torch, 3.52×** |
 
 For Legion, the comparison uses only configurations that completed. In particular, the Full ONNX
 GPU value is the sole successful Full ONNX GPU path, while the faster-looking alternatives were

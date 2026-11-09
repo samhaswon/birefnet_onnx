@@ -30,6 +30,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--skip-gpu", action="store_true")
     parser.add_argument(
+        "--fp32-only", action="store_true",
+        help="Run only FP32 Torch and ONNX cases on CPU and CUDA (disable TF32).",
+    )
+    parser.add_argument(
         "--disable-onnx-gpu",
         action="append",
         default=[],
@@ -93,7 +97,9 @@ def benchmark_torch(args: argparse.Namespace) -> dict:
     if args.device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable")
     device = torch.device(args.device)
-    torch.set_float32_matmul_precision("high")
+    torch.set_float32_matmul_precision("highest")
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
     model = load_model(args.checkpoint.resolve(), device).to(memory_format=torch.channels_last)
     if args.torch_mode != "fp32" and device.type != "cuda":
         raise ValueError(f"{args.torch_mode} is only supported on CUDA")
@@ -150,7 +156,7 @@ def benchmark_onnx(args: argparse.Namespace) -> dict:
     options = ort.SessionOptions()
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
     providers = (
-        [("CUDAExecutionProvider", {"device_id": 0}), "CPUExecutionProvider"]
+        [("CUDAExecutionProvider", {"device_id": 0, "use_tf32": 0}), "CPUExecutionProvider"]
         if args.device == "cuda"
         else ["CPUExecutionProvider"]
     )
@@ -225,7 +231,9 @@ def main(args: argparse.Namespace) -> None:
     models = sorted(args.models_dir.glob("*.onnx"))
     results = []
     for checkpoint in checkpoints:
-        torch_cases = [("cpu", "fp32"), ("cuda", "amp-fp16"), ("cuda", "static-fp16")]
+        torch_cases = [("cpu", "fp32"), ("cuda", "fp32")]
+        if not args.fp32_only:
+            torch_cases.extend([("cuda", "amp-fp16"), ("cuda", "static-fp16")])
         for device, torch_mode in torch_cases:
             execution = "compiled" if not args.no_torch_compile else "optimized-eager"
             engine = f"torch-{execution}-{torch_mode}"
@@ -243,6 +251,8 @@ def main(args: argparse.Namespace) -> None:
                 label,
             ))
     for model in models:
+        if args.fp32_only and model.stem.endswith("-fp16"):
+            continue
         for device in ("cpu", "cuda"):
             label = {"model": model.stem, "engine": "onnxruntime", "device": device}
             is_static_fp16 = model.stem.endswith("-fp16")
@@ -268,6 +278,8 @@ def main(args: argparse.Namespace) -> None:
         "warmup_runs": args.warmup_runs,
         "measured_runs": args.runs,
         "torch_compile": not args.no_torch_compile,
+        "fp32_only": args.fp32_only,
+        "tf32": False,
         "results": results,
     }
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
