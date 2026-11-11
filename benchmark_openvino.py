@@ -32,6 +32,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--include-opset22", action="store_true")
     parser.add_argument(
+        "--graph-optimization", choices=("all", "basic", "disabled"), default="all",
+        help="ORT graph optimization level (default: all, matching a default ORT session).",
+    )
+    parser.add_argument(
         "--allow-dynamic-shapes", action="store_true",
         help="Use OpenVINO dynamic compilation instead of specializing subgraph inputs.",
     )
@@ -61,7 +65,12 @@ def benchmark_model(args: argparse.Namespace) -> dict:
             "OpenVINOExecutionProvider unavailable; install requirements-openvino.txt"
         )
     options = ort.SessionOptions()
-    options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+    optimization_levels = {
+        "all": ort.GraphOptimizationLevel.ORT_ENABLE_ALL,
+        "basic": ort.GraphOptimizationLevel.ORT_ENABLE_BASIC,
+        "disabled": ort.GraphOptimizationLevel.ORT_DISABLE_ALL,
+    }
+    options.graph_optimization_level = optimization_levels[args.graph_optimization]
     provider_options = {
         "device_type": args.device,
         "disable_dynamic_shapes": "False" if args.allow_dynamic_shapes else "True",
@@ -104,6 +113,7 @@ def benchmark_model(args: argparse.Namespace) -> dict:
         "onnxruntime_version": ort.__version__,
         "input_dtype": input_meta.type,
         "provider_options": provider_options,
+        "graph_optimization": args.graph_optimization,
     }
 
 
@@ -118,6 +128,7 @@ def invoke_worker(args: argparse.Namespace, model: Path) -> dict:
         sys.executable, str(Path(__file__).resolve()), "--worker", "--model", str(model),
         "--device", args.device, "--image-size", str(args.image_size),
         "--warmup-runs", str(args.warmup_runs), "--runs", str(args.runs),
+        "--graph-optimization", args.graph_optimization,
     ]
     if args.allow_dynamic_shapes:
         command.append("--allow-dynamic-shapes")
@@ -173,6 +184,7 @@ def main(args: argparse.Namespace) -> None:
         "provider": PROVIDER, "device": args.device, "cpu_fallback": True,
         "include_opset22": args.include_opset22, "fp32_only": args.fp32_only,
         "disable_dynamic_shapes": not args.allow_dynamic_shapes,
+        "graph_optimization": args.graph_optimization,
         "memory_note": "Peak process RSS includes session creation and warmups. "
                        "OpenVINO EP exposes no portable peak GPU allocation counter; "
                        "GPU allocation is unmeasured (null).",
