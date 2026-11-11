@@ -90,3 +90,40 @@ improve latency on hardware without strong native FP16 throughput.
 For Legion, the comparison uses only configurations that completed. In particular, the Full ONNX
 GPU value is the sole successful Full ONNX GPU path, while the faster-looking alternatives were
 `DNF` because of the 4 GB VRAM limit.
+
+## gmkg3p0
+
+GMKtec G3 Plus, Intel N150 with integrated Intel GPU, 16 GB DDR4-3200,
+Ubuntu 24.04.5 LTS.
+
+### ONNX Runtime OpenVINO
+
+ONNX Runtime 1.24.1,
+`OpenVINOExecutionProvider` targeting `GPU.0`, with CPU fallback allowed. ORT graph
+optimizations were enabled (`all`) and OpenVINO dynamic shapes were disabled. No separate CPU
+test was run, so CPU-to-GPU speedup is unavailable. FP32/FP16 below describe the exported model
+input and weight types; internal OpenVINO execution precision was not measured.
+
+| Model | FP32 latency (mean ± stddev) | FP16 latency (mean ± stddev) |
+|---|---:|---:|
+| Lite, baseline opset 21 | 5,543.4 ± 48.8 ms | 5,515.9 ± 42.9 ms |
+| Lite, optimized opset 21 | 5,567.4 ± 50.0 ms | 5,571.8 ± 48.3 ms |
+| Full, baseline opset 21 | 10,971.0 ± 57.8 ms | 10,956.3 ± 66.4 ms |
+| Full, optimized opset 21 | 11,063.4 ± 77.7 ms | 10,978.4 ± 78.4 ms |
+
+### Peak process memory
+
+| Model | FP32 peak RSS | FP16 peak RSS |
+|---|---:|---:|
+| Lite, baseline opset 21 | 1,886.5 MiB | 1,886.5 MiB |
+| Lite, optimized opset 21 | 1,886.5 MiB | 1,886.5 MiB |
+| Full, baseline opset 21 | 6,218.6 MiB | 3,643.3 MiB |
+| Full, optimized opset 21 | 5,931.8 MiB | 3,339.5 MiB |
+
+RSS includes session creation and warmups. GPU allocation was not measured; these RSS
+values do not represent total shared iGPU memory usage.
+
+All four opset-22 cases were skipped by configuration
+because support was not yet available; they were not attempted. The fastest measured paths
+were baseline FP16 for both Lite (5,515.9 ms) and Full (10,956.3 ms). FP32 and FP16
+latencies were similar on this machine.

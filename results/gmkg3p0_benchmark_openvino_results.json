@@ -1,0 +1,216 @@
+{
+  "image_size": 1024,
+  "batch_size": 1,
+  "warmup_runs": 3,
+  "measured_runs": 10,
+  "provider": "OpenVINOExecutionProvider",
+  "device": "GPU.0",
+  "cpu_fallback": true,
+  "include_opset22": false,
+  "fp32_only": false,
+  "disable_dynamic_shapes": true,
+  "graph_optimization": "all",
+  "memory_note": "Peak process RSS includes session creation and warmups. OpenVINO EP exposes no portable peak GPU allocation counter; GPU allocation is unmeasured (null).",
+  "results": [
+    {
+      "model": "birefnet-full-baseline-opset21-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 10956.326278304914,
+      "stddev_ms": 66.3826407862196,
+      "peak_process_rss_mib": 3643.2578125,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float16)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-full-baseline-opset21",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 10971.001749997959,
+      "stddev_ms": 57.76542003263287,
+      "peak_process_rss_mib": 6218.56640625,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-full-opset22-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        22
+      ],
+      "status": "skipped",
+      "reason": "opset 22 is currently unsupported; enable with --include-opset22"
+    },
+    {
+      "model": "birefnet-full-opset22",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        22
+      ],
+      "status": "skipped",
+      "reason": "opset 22 is currently unsupported; enable with --include-opset22"
+    },
+    {
+      "model": "birefnet-full-optimized-opset21-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 10978.447937400779,
+      "stddev_ms": 78.3878099712999,
+      "peak_process_rss_mib": 3339.5390625,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float16)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-full-optimized-opset21",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 11063.40861589706,
+      "stddev_ms": 77.71449932984002,
+      "peak_process_rss_mib": 5931.83984375,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 5515.887108905008,
+      "stddev_ms": 42.86325827839422,
+      "peak_process_rss_mib": 1886.5078125,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float16)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-lite-baseline-opset21",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 5543.3595106966095,
+      "stddev_ms": 48.7842647450709,
+      "peak_process_rss_mib": 1886.5078125,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-lite-opset22-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        22
+      ],
+      "status": "skipped",
+      "reason": "opset 22 is currently unsupported; enable with --include-opset22"
+    },
+    {
+      "model": "birefnet-lite-opset22",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        22
+      ],
+      "status": "skipped",
+      "reason": "opset 22 is currently unsupported; enable with --include-opset22"
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21-fp16",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 5571.845858095912,
+      "stddev_ms": 48.26916707059233,
+      "peak_process_rss_mib": 1886.5078125,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float16)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    },
+    {
+      "model": "birefnet-lite-optimized-opset21",
+      "engine": "onnxruntime-openvino",
+      "device": "GPU.0",
+      "opsets": [
+        21
+      ],
+      "status": "ok",
+      "average_ms": 5567.3645599978045,
+      "stddev_ms": 50.004573740046006,
+      "peak_process_rss_mib": 1886.5078125,
+      "peak_gpu_allocated_mib": null,
+      "onnxruntime_version": "1.24.1",
+      "input_dtype": "tensor(float)",
+      "provider_options": {
+        "device_type": "GPU.0",
+        "disable_dynamic_shapes": "True"
+      },
+      "graph_optimization": "all"
+    }
+  ]
+}
