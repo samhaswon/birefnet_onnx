@@ -80,3 +80,33 @@ Results are written to `benchmark_results.json` unless changed with `--output`.
 ## AI Acknowledgement
 
 GPT-5.6 Sol in Codex was used to clean up the export code and to prepare the benchmark, with all code human-verified for correctness.
+
+## OpenVINO GPU benchmark
+
+Install the separate requirements in a dedicated environment (the OpenVINO wheel replaces the
+other ONNX Runtime wheels):
+
+```bash
+python3 -m venv .venv-openvino
+.venv-openvino/bin/pip install -r requirements-openvino.txt
+.venv-openvino/bin/python benchmark_openvino.py --device GPU.0 --warmup-runs 3 --runs 10
+```
+
+The host needs Intel GPU drivers and access to the GPU render device; containers also need access
+to `/dev/dri`. This uses the `onnxruntime-openvino` package and `device_type` option described in the
+[ONNX Runtime OpenVINO EP documentation](https://onnxruntime.ai/docs/execution-providers/OpenVINO-ExecutionProvider.html).
+Only GPU-targeted cases run: `--device` accepts `GPU` or an indexed target such as `GPU.0` or `GPU.1`.
+CPU fallback for unsupported operations is allowed, but there is no separate CPU benchmark. A
+missing OpenVINO provider or failed GPU session is reported as a failure.
+
+Opset 22 models are recorded as skipped by default, using the ONNX metadata rather than filenames.
+Use `--include-opset22` to attempt them when support is available. Both FP32 and static FP16 models
+are tested; `--fp32-only` skips static FP16 inputs. `--models-dir`, `--image-size`, and `--output`
+work as in the main benchmark. Default output is `benchmark_openvino_results.json`.
+
+Each model runs in a fresh process. Results include average latency, latency standard deviation,
+and peak process RSS in MiB, including session creation and warmups. Latency measures synchronous
+`session.run` calls, including host/device transfers, without model loading or input generation.
+GPU allocation is left `null`: this benchmark does not measure device memory, and process RSS is
+not a substitute for GPU memory, including on shared-memory iGPUs. OpenVINO manages graph
+optimization; ORT graph optimizations are disabled for this benchmark.
