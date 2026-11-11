@@ -31,6 +31,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--warmup-runs", type=int, default=3)
     parser.add_argument("--runs", type=int, default=10)
     parser.add_argument("--include-opset22", action="store_true")
+    parser.add_argument(
+        "--allow-dynamic-shapes", action="store_true",
+        help="Use OpenVINO dynamic compilation instead of specializing subgraph inputs.",
+    )
     parser.add_argument("--fp32-only", action="store_true", help="Skip static FP16 exports.")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--model", type=Path, help=argparse.SUPPRESS)
@@ -58,9 +62,13 @@ def benchmark_model(args: argparse.Namespace) -> dict:
         )
     options = ort.SessionOptions()
     options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+    provider_options = {
+        "device_type": args.device,
+        "disable_dynamic_shapes": "False" if args.allow_dynamic_shapes else "True",
+    }
     session = ort.InferenceSession(
         str(args.model), sess_options=options,
-        providers=[(PROVIDER, {"device_type": args.device})],
+        providers=[(PROVIDER, provider_options), "CPUExecutionProvider"],
     )
     session.disable_fallback()
     if PROVIDER not in session.get_providers():
@@ -80,7 +88,7 @@ def benchmark_model(args: argparse.Namespace) -> dict:
         raise ValueError(f"Model input {input_meta.shape} does not match requested shape {shape}")
     sample = np.random.default_rng(0).standard_normal(shape).astype(dtypes[input_meta.type])
     feeds = {input_meta.name: sample}
-    for _ in range(args.warmup_runs):
+    for _ in range(max(1, args.warmup_runs)):
         session.run(None, feeds)
     timings = []
     for _ in range(args.runs):
@@ -95,6 +103,7 @@ def benchmark_model(args: argparse.Namespace) -> dict:
         "peak_gpu_allocated_mib": None,
         "onnxruntime_version": ort.__version__,
         "input_dtype": input_meta.type,
+        "provider_options": provider_options,
     }
 
 
@@ -110,6 +119,8 @@ def invoke_worker(args: argparse.Namespace, model: Path) -> dict:
         "--device", args.device, "--image-size", str(args.image_size),
         "--warmup-runs", str(args.warmup_runs), "--runs", str(args.runs),
     ]
+    if args.allow_dynamic_shapes:
+        command.append("--allow-dynamic-shapes")
     completed = subprocess.run(command, capture_output=True, text=True, check=False)
     if completed.returncode == 0:
         for line in reversed(completed.stdout.splitlines()):
@@ -158,9 +169,10 @@ def main(args: argparse.Namespace) -> None:
         print(f"{model.name}: {result['status']}", flush=True)
     payload = {
         "image_size": args.image_size, "batch_size": 1,
-        "warmup_runs": args.warmup_runs, "measured_runs": args.runs,
+        "warmup_runs": max(1, args.warmup_runs), "measured_runs": args.runs,
         "provider": PROVIDER, "device": args.device, "cpu_fallback": True,
         "include_opset22": args.include_opset22, "fp32_only": args.fp32_only,
+        "disable_dynamic_shapes": not args.allow_dynamic_shapes,
         "memory_note": "Peak process RSS includes session creation and warmups. "
                        "OpenVINO EP exposes no portable peak GPU allocation counter; "
                        "GPU allocation is unmeasured (null).",

@@ -110,3 +110,12 @@ and peak process RSS in MiB, including session creation and warmups. Latency mea
 GPU allocation is left `null`: this benchmark does not measure device memory, and process RSS is
 not a substitute for GPU memory, including on shared-memory iGPUs. OpenVINO manages graph
 optimization; ORT graph optimizations are disabled for this benchmark.
+
+By default, the EP uses `disable_dynamic_shapes=True` to specialize subgraphs using their concrete
+runtime input shapes. This can avoid Intel GPU compilation failures such as
+`get_dims() is called for dynamic shape`, even when the ONNX image input has fixed dimensions:
+partitioned subgraphs can still have dynamic inputs. Use `--allow-dynamic-shapes` to restore the
+EP's dynamic compilation behavior for comparison. This is a workaround, not a guarantee that every
+GPU operation will compile. At least one untimed warmup always runs, even with `--warmup-runs 0`,
+so deferred compilation is excluded from measured latency. The effective warmup count and shape
+setting are recorded in the results.
